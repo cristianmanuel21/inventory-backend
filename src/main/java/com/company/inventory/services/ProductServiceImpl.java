@@ -14,7 +14,9 @@ import com.company.inventory.dao.ICategoryDao;
 import com.company.inventory.dao.IProductDao;
 import com.company.inventory.model.Category;
 import com.company.inventory.model.Product;
+import com.company.inventory.response.CategoryResponseRest;
 import com.company.inventory.response.ProductResponseRest;
+import com.company.inventory.uitl.Util;
 
 @Service
 public class ProductServiceImpl implements IProductService{
@@ -64,6 +66,35 @@ public class ProductServiceImpl implements IProductService{
 		}
 		
 		return new ResponseEntity<ProductResponseRest>(response,HttpStatus.OK);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ProductResponseRest> searchById(Long id) {
+		
+		ProductResponseRest response=new ProductResponseRest();
+		List<Product> list=new ArrayList<>();
+		
+		try {
+			Optional<Product> product = productDao.findById(id);
+			if (product.isPresent()) {
+				byte[] imageDescompressed=Util.decompressZLib(product.get().getPicture());
+				product.get().setPicture(imageDescompressed);
+				list.add(product.get());
+				response.getProductResponse().setProducts(list);
+				response.setMetadata("Respuesta ok", "00", "Producto encontrada");
+			} else {
+				response.setMetadata("Respuesta nok", "-1", "Producto no encontrada");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+			
+		} catch (Exception e) {
+			
+			response.setMetadata("Respuesta nok", "-1", "Error al consultar por id");
+			e.getStackTrace();
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 	}
 
 }
