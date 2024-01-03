@@ -6,9 +6,9 @@ import com.company.inventory.model.Category;
 
 import lombok.Data;
 
-@Data
-public class CategoryResponse {
+	@Data
+	public class CategoryResponse {
+		
+		private List<Category> category;
 	
-	private List<Category> category;
-
-}
+	}
