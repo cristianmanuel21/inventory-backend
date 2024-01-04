@@ -3,6 +3,7 @@ package com.company.inventory.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -142,6 +143,37 @@ public class ProductServiceImpl implements IProductService{
 		
 		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 		
+	}
+
+	
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ProductResponseRest> search() {
+		ProductResponseRest response=new ProductResponseRest();
+		List<Product> list=new ArrayList<>();
+		
+		try {
+			list = (List<Product>)productDao.findAll();
+			if (list.size()>0) {
+				list.stream().map(p-> {
+					byte[] imageDescompressed=Util.decompressZLib(p.getPicture());
+					p.setPicture(imageDescompressed);
+					return p;
+				}).collect(Collectors.toList());
+				response.getProductResponse().setProducts(list);
+				response.setMetadata("Respuesta ok", "00", "Productos encontrados");
+			} else {
+				response.setMetadata("Respuesta nok", "-1", "Lista vacia");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+			}
+			
+		} catch (Exception e) {
+			
+			response.setMetadata("Respuesta nok", "-1", "Error al consultar");
+			e.getStackTrace();
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 	}
 	
 	

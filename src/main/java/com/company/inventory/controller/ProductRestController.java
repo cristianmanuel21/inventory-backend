@@ -30,6 +30,13 @@ public class ProductRestController {
 		this.productService = productService;
 	}
 	
+	@GetMapping("/products")
+	public ResponseEntity<ProductResponseRest> searchbyId(){
+		ResponseEntity<ProductResponseRest> response= productService.search();
+		
+		return response;
+	}
+	
 	/**
 	 * 
 	 * @param id
