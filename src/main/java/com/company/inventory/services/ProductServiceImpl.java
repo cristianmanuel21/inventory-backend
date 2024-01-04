@@ -97,4 +97,56 @@ public class ProductServiceImpl implements IProductService{
 		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ProductResponseRest> searchByName(String name) {
+		ProductResponseRest response=new ProductResponseRest();
+		List<Product> list=new ArrayList<>();
+		
+		try {
+			List<Product> product = productDao.findByNameContainingIgnoreCase(name);
+			if (!product.isEmpty()) {
+				byte[] imageDescompressed=Util.decompressZLib(product.get(0).getPicture());
+				product.get(0).setPicture(imageDescompressed);
+				list.add(product.get(0));
+				response.getProductResponse().setProducts(list);
+				response.setMetadata("Respuesta ok", "00", "Producto encontrada");
+			} else {
+				response.setMetadata("Respuesta nok", "-1", "Producto no encontrada");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+			
+		} catch (Exception e) {
+			
+			response.setMetadata("Respuesta nok", "-1", "Error al consultar por id");
+			e.getStackTrace();
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<ProductResponseRest> delete(Long id) {
+		ProductResponseRest response = new ProductResponseRest();
+		
+		try {
+			
+			productDao.deleteById(id);
+			response.setMetadata("respuesta ok", "00", "Registro eliminado");
+		} catch (Exception e) {
+			response.setMetadata("Respuesta nok", "-1", "Error al eliminar");
+			e.getStackTrace();
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+		
+	}
+	
+	
+	
+	
+	
+
 }
